@@ -31,6 +31,6 @@ else
     if [ ! -f .lake/build/bin/comment_data ]; then
       lake build comment_data
     fi
-    .lake/build/bin/comment_data ${FLAGS[@]} $mod > $DIR/$mod._comment && mv $DIR/$mod._comment $DIR/$mod.comment
+    .lake/build/bin/comment_data ${FLAGS[@]} $mod > $DIR/$mod._comment && mv $DIR/$mod._comment $DIR/$mod.json
   fi
 fi
