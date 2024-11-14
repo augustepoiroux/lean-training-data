@@ -61,6 +61,12 @@ structure Result where
   seconds : Float
   heartbeats : Nat
 
+def withSeconds [Monad m] [MonadLiftT BaseIO m] (act : m α) : m (α × Float) := do
+  let start ← IO.monoNanosNow
+  let a ← act
+  let stop ← IO.monoNanosNow
+  return (a, (stop - start).toFloat / 1000000000)
+
 /--
 Compile the designated module, select declarations satisfying a predicate,
 and run a tactic on the type of each declaration.
@@ -100,6 +106,7 @@ def useAesop : TacticM Unit := do evalTactic (← `(tactic| aesop))
 def useExact? : TacticM Unit := do evalTactic (← `(tactic| exact?))
 def useRfl : TacticM Unit := do evalTactic (← `(tactic| intros; rfl))
 def useSimpAll : TacticM Unit := do evalTactic (← `(tactic| intros; simp_all))
+def useOmega : TacticM Unit := do evalTactic (← `(tactic| intros; omega))
 
 open Cli System
 
@@ -111,6 +118,7 @@ def tacticBenchmarkMain (args : Cli.Parsed) : IO UInt32 := do
     if args.hasFlag "exact" then pure useExact? else
     if args.hasFlag "rfl" then pure useRfl else
     if args.hasFlag "simp_all" then pure useSimpAll else
+    if args.hasFlag "omega" then pure useOmega else
     throw <| IO.userError "Specify a tactic, e.g. `--aesop`"
   let result := runTacticAtDecls module (fun _ => pure true) tac
   IO.println s!"{module}"
@@ -129,6 +137,7 @@ def tactic_benchmark : Cmd := `[Cli|
     "exact";       "Use `exact?`."
     "rfl";         "Use `intros; rfl`."
     "simp_all";    "Use `intros; simp_all`."
+    "omega";       "Use `intros; omega`."
 
   ARGS:
     module : ModuleName; "Lean module to compile and export InfoTrees."
